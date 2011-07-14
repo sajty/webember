@@ -8,16 +8,19 @@
 
 # remember that the current source dir is the project root; this file is in X11/
 file (GLOB PLATFORM RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    X11/[^.]*.cpp
-    X11/[^.]*.h
-    X11/[^.]*.cmake
+    X11/*.cpp
+    X11/*.h
+    X11/*.cmake
     )
+
 
 SOURCE_GROUP(X11 FILES ${PLATFORM})
 
 # use this to add preprocessor definitions
 add_definitions(
+    -DPREFIX="${CMAKE_INSTALL_PREFIX}"
 )
+
 
 set (SOURCES
     ${SOURCES}
@@ -29,4 +32,6 @@ add_x11_plugin(${PROJECT_NAME} SOURCES)
 # add library dependencies here; leave ${PLUGIN_INTERNAL_DEPS} there unless you know what you're doing!
 target_link_libraries(${PROJECT_NAME}
     ${PLUGIN_INTERNAL_DEPS}
+    -lX11
+    -lSDL
     )

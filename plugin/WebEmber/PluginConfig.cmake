@@ -1,8 +1,6 @@
-#/**********************************************************\ 
-#
+#/**********************************************************\
 # Auto-Generated Plugin Configuration file
 # for WebEmber
-#
 #\**********************************************************/
 
 set(PLUGIN_NAME "WebEmber")
@@ -58,4 +56,7 @@ set(FBMAC_USE_INVALIDATINGCOREANIMATION 0)
 # If you want to register per-machine on Windows, uncomment this line
 set (FB_ATLREG_MACHINEWIDE 1)
 
-add_firebreath_library(log4cplus)
+if(WIN32)
+  #logging on linux is not working
+  add_firebreath_library(log4cplus)
+endif()
