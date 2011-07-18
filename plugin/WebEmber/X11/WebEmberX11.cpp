@@ -14,20 +14,21 @@ WebEmberX11::WebEmberX11(WebEmber* plugin) :
 	mPlugin(plugin),
 	mFocus(false),
 	mVisible(false),
-	mFakeMask(PropertyChangeMask)
+	mFakeMask(PropertyChangeMask),
+	mWindow(0),
+	mDisplaySDL(0),
+	mPluginWindow(0)
 {
 }
 
 bool WebEmberX11::initSDL(FB::PluginWindow *pluginwindow)
 {
+	assert(!mPluginWindow);
 	mPluginWindow = static_cast<FB::PluginWindowX11*>(pluginwindow);
 
 	GtkWidget* widget = mPluginWindow->getWidget();
-	//get GtkPlug, which is the plugins main window
-	GtkContainer* container;
-	g_object_get(widget, "parent", &container, NULL);
 
-	//Fixes BadWindow error in SDL_SetVideoMode
+	// Fixes BadWindow error in SDL_SetVideoMode
 	XFlush(GDK_DISPLAY_XDISPLAY(gtk_widget_get_display(widget)));
 
 	char tmp[64];
@@ -37,10 +38,12 @@ bool WebEmberX11::initSDL(FB::PluginWindow *pluginwindow)
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		FBLOG_FATAL("WebEmberX11::initSDL", "Couldn't initialize SDL: " << SDL_GetError());
+		return true;
 	}
 
 	if (!SDL_SetVideoMode(800, 600, 0, 0)) {
 		FBLOG_FATAL("WebEmberX11::initSDL", "Couldn't create SDL window: " << SDL_GetError());
+		return true;
 	}
 
 	SDL_SysWMinfo info;
@@ -50,22 +53,24 @@ bool WebEmberX11::initSDL(FB::PluginWindow *pluginwindow)
 	SDL_GetWMInfo(&info);
 	mDisplaySDL = info.info.x11.display;
 	mWindow = info.info.x11.window;
-	//Select the events, what SDL should receive.
-	//SDL will not receive any messages when SDL_WINDOWID is set.
+	// Select the events, what SDL should receive.
+	// SDL will not receive any messages when SDL_WINDOWID is set.
 	{
 		attributes.event_mask =
 			//KeyPressMask | KeyReleaseMask | //ButtonPressMask | //ButtonReleaseMask |
-			PropertyChangeMask //| StructureNotifyMask | KeymapStateMask |
+			PropertyChangeMask// | StructureNotifyMask | //KeymapStateMask |
 			//EnterWindowMask  | LeaveWindowMask | ExposureMask | PointerMotionMask |
-			//VisibilityChangeMask// | PointerMotionHintMask | FocusChangeMask
+			//VisibilityChangeMask// | PointerMotionHintMask |
+			//FocusChangeMask
 			;
+
+		//select events, what SDL should receive.
 		XSelectInput(mDisplaySDL, mWindow, attributes.event_mask);
 
 	}
-
+	return false;
 }
 
-//Injects Mouse button event to SDL
 void WebEmberX11::injectButtonToSDL(GdkEventButton* event)
 {
 
@@ -77,7 +82,7 @@ void WebEmberX11::injectButtonToSDL(GdkEventButton* event)
 	xevent.xbutton.send_event = True;
 	xevent.xbutton.display = mDisplaySDL;
 	xevent.xbutton.window = mWindow;
-	xevent.xbutton.root = mPluginWindow->getBrowserWindow(); //I'm not sure of this.
+	xevent.xbutton.root = mPluginWindow->getBrowserWindow();
 	xevent.xbutton.subwindow = None;
 	xevent.xbutton.time = event->time;
 	xevent.xbutton.x = event->x;
@@ -90,9 +95,9 @@ void WebEmberX11::injectButtonToSDL(GdkEventButton* event)
 
 	// The problem is that only 1 client can receive ButtonPressMask.
 	// The trick is that we resend it with a fake mask which is received by SDL.
-	XSendEvent(mDisplaySDL, mPluginWindow->getWindow(), False, mFakeMask, &xevent);
+	XSendEvent(mDisplaySDL, mWindow, False, mFakeMask, &xevent);
 }
-//Injects Mouse button event to SDL
+
 void WebEmberX11::injectKeyToSDL(GdkEventKey* event)
 {
 
@@ -110,7 +115,7 @@ void WebEmberX11::injectKeyToSDL(GdkEventKey* event)
 	xevent.xkey.send_event = True;
 	xevent.xkey.display = mDisplaySDL;
 	xevent.xkey.window = mWindow;
-	xevent.xkey.root = mPluginWindow->getBrowserWindow(); //I'm not sure of this.
+	xevent.xkey.root = mPluginWindow->getBrowserWindow();
 	xevent.xkey.subwindow = None;
 	xevent.xkey.time = event->time;
 	xevent.xkey.x = 1;
@@ -121,8 +126,9 @@ void WebEmberX11::injectKeyToSDL(GdkEventKey* event)
 	xevent.xkey.keycode = event->hardware_keycode;
 	xevent.xkey.same_screen = True;
 
-	XSendEvent(mDisplaySDL, mPluginWindow->getWindow(), False, mFakeMask, &xevent);
+	XSendEvent(mDisplaySDL, mWindow, False, mFakeMask, &xevent);
 }
+
 void WebEmberX11::injectMotionToSDL(GdkEventMotion* event)
 {
 	//We need to convert GdkEvent back to XEvent manually.
@@ -133,7 +139,7 @@ void WebEmberX11::injectMotionToSDL(GdkEventMotion* event)
 	xevent.xmotion.send_event = True;
 	xevent.xmotion.display = mDisplaySDL;
 	xevent.xmotion.window = mWindow;
-	xevent.xmotion.root = mPluginWindow->getBrowserWindow(); //I'm not sure of this.
+	xevent.xmotion.root = mPluginWindow->getBrowserWindow();
 	xevent.xmotion.subwindow = None;
 	xevent.xmotion.time = event->time;
 	xevent.xmotion.x = event->x;
@@ -144,15 +150,16 @@ void WebEmberX11::injectMotionToSDL(GdkEventMotion* event)
 	xevent.xmotion.is_hint = event->is_hint;
 	xevent.xmotion.same_screen = True;
 
-	XSendEvent(mDisplaySDL, mPluginWindow->getWindow(), False, mFakeMask, &xevent);
+	XSendEvent(mDisplaySDL, mWindow, False, mFakeMask, &xevent);
 }
-void WebEmberX11::injectVisibilityToSDL()
+
+void WebEmberX11::injectVisibilityToSDL(bool visible)
 {
 	//We need to convert GdkEvent back to XEvent manually.
 	XEvent xevent;
 	memset(&xevent, 0, sizeof(XEvent));
 
-	if (mVisible) {
+	if (visible) {
 		xevent.xunmap.type = MapNotify;
 		xevent.xunmap.serial = 0;
 		xevent.xunmap.send_event = True;
@@ -170,30 +177,30 @@ void WebEmberX11::injectVisibilityToSDL()
 		xevent.xmap.override_redirect = False;
 	}
 
-	XSendEvent(mDisplaySDL, mPluginWindow->getWindow(), False, mFakeMask, &xevent);
+	XSendEvent(mDisplaySDL, mWindow, False, mFakeMask, &xevent);
 }
 
 bool WebEmberX11::onX11Event(FB::X11Event *evt, FB::PluginWindow * pwin)
 {
-	//assert: received event from different firebreath window
-	assert(pwin == (FB::PluginWindow*)mPluginWindow);
-	GdkEventMotion *motion;
-	if (evt->m_event->any.send_event == true)
+	//Do not handle event if:
+	//-It's not the active firebreath window.
+	//-When the event is sent by XSendEvent. It could be our injected event and it could loop forever.
+	if (pwin != (FB::PluginWindow*)mPluginWindow || evt->m_event->any.send_event == true){
 		return true;
+	}
+
 	switch (evt->m_event->type) {
 	case GDK_MOTION_NOTIFY:
 	{
-		printf("%dx%d\n", (int)((GdkEventMotion*)evt->m_event)->x, (int)((GdkEventMotion*)evt->m_event)->y);
 		injectMotionToSDL((GdkEventMotion*)evt->m_event);
 	} break;
 	case GDK_BUTTON_PRESS:
 	{
-
-		printf("Button Pressed\n");
-		injectButtonToSDL((GdkEventButton*)evt->m_event);
+		GdkEventButton* buttonevent = (GdkEventButton*)evt->m_event;
+		injectButtonToSDL(buttonevent);
 		if (!mFocus) {
 			Display* display = GDK_DISPLAY_XDISPLAY(gtk_widget_get_display(mPluginWindow->getWidget()));
-			XSetInputFocus(display, mPluginWindow->getWindow(), RevertToParent, CurrentTime);
+			XSetInputFocus(display, mWindow, RevertToParent, buttonevent->time);
 			gtk_widget_grab_focus(mPluginWindow->getWidget());
 		}
 	} break;
@@ -222,25 +229,19 @@ bool WebEmberX11::onX11Event(FB::X11Event *evt, FB::PluginWindow * pwin)
 		if (visibility->state != GDK_VISIBILITY_FULLY_OBSCURED) {
 			if (!mVisible) {
 				mVisible = true;
-				injectVisibilityToSDL();
-				XFlush(mDisplaySDL);
+				injectVisibilityToSDL(mVisible);
+				//XFlush(mDisplaySDL);
 			}
 		} else {
 			if (mVisible) {
 				mVisible = false;
-				injectVisibilityToSDL();
-				XFlush(mDisplaySDL);
+				injectVisibilityToSDL(mVisible);
+				//XFlush(mDisplaySDL);
 			}
 		}
-		//firefox-bin: Fatal IO error 11 (Resource temporarily unavailable) on X server :0.
-		//firefox-bin: ../../src/xcb_io.c:140: dequeue_pending_request: Assertion `req == dpy->xcb->pending_requests' failed.
-		//To fix it, we discard all messages, then send visibility event
-		//XSync(mDisplaySDL,true);
-
-		//then we need to wait for the execution, or the last frame could be drawn after the other firefox tab is drawn.
-		//XSync(mDisplaySDL,false);
 	} break;
 	}
+
 	//Returns true to never use the firebreath's default event handling.
 	return true;
 }
