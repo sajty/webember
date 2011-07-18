@@ -28,6 +28,12 @@ public:
 	 * This needs to be called from the main thread or some versions of firefox will assert!
 	 */
 	bool initSDL(FB::PluginWindow *pluginwindow);
+	/**
+	 * @brief Deinitialize SDL. Sends window destoryed event to SDL.
+	 *
+	 * You should call this from main thread.
+	 */
+	void deinitSDL(FB::PluginWindow *pluginwindow);
 
 	/**
 	 * @brief Event handling.
@@ -108,5 +114,12 @@ private:
 	 * In Xorg docs it says that all clients should receive it, so its a bit weird.
 	 */
 	void injectKeyToSDL(GdkEventKey* event);
+	/**
+	 * @brief Injects WM_DELETE_WINDOW client event to SDL.
+	 *
+	 * On this call, SDL will shut down everything needed to dettach the window.
+	 * It will also start the normal shut down process on other threads.
+	 */
+	void injectWindowDestroyToSDL();
 };
 #endif

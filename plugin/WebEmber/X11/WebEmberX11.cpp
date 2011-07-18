@@ -67,10 +67,41 @@ bool WebEmberX11::initSDL(FB::PluginWindow *pluginwindow)
 		//select events, what SDL should receive.
 		XSelectInput(mDisplaySDL, mWindow, attributes.event_mask);
 
+		// Get the atom.
+		//Atom WM_DELETE_WINDOW = XInternAtom(mDisplaySDL, "WM_DELETE_WINDOW", False);
+
+		// Send window destory event to SDL to shut down properly.
+		//XSetWMProtocols(mDisplaySDL, mWindow, &WM_DELETE_WINDOW, 1);
 	}
 	return false;
 }
+void WebEmberX11::deinitSDL(FB::PluginWindow *pluginwindow)
+{
+	assert(pluginwindow == (FB::PluginWindow*)mPluginWindow);
+	XSync(mDisplaySDL,true);
+	injectWindowDestroyToSDL();
+	XFlush(mDisplaySDL);
 
+}
+void WebEmberX11::injectWindowDestroyToSDL()
+{
+
+	// Get the atom.
+	Atom WM_DELETE_WINDOW = XInternAtom(mDisplaySDL, "WM_DELETE_WINDOW", False);
+
+	XEvent xevent;
+	memset(&xevent, 0, sizeof(XEvent));
+	xevent.xclient.type = ClientMessage;
+	xevent.xclient.serial = 0; //I'm not sure of this.
+	xevent.xclient.send_event = True;
+	xevent.xclient.display = mDisplaySDL;
+	xevent.xclient.window = mWindow;
+	xevent.xclient.message_type = WM_DELETE_WINDOW;
+	xevent.xclient.format = 32;
+	xevent.xclient.data.l[0] = WM_DELETE_WINDOW;
+
+	XSendEvent(mDisplaySDL, mWindow, False, mFakeMask, &xevent);
+}
 void WebEmberX11::injectButtonToSDL(GdkEventButton* event)
 {
 
@@ -97,6 +128,7 @@ void WebEmberX11::injectButtonToSDL(GdkEventButton* event)
 	// The trick is that we resend it with a fake mask which is received by SDL.
 	XSendEvent(mDisplaySDL, mWindow, False, mFakeMask, &xevent);
 }
+
 
 void WebEmberX11::injectKeyToSDL(GdkEventKey* event)
 {
