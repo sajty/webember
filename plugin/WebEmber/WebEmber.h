@@ -147,7 +147,6 @@ private:
 	WebEmberRunnerPtr mRunner;
 	WebEmberMessageQueuePtr mMessageQueue;
 	FB::PluginWindow* mActivePluginWindow;
-	boost::mutex mWindowAttachMutex;
 	static boost::thread* mThreadEmber;
 	static boost::thread* mThreadMessageQueue;
 	void startEmber();

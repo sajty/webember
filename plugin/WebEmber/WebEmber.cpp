@@ -90,8 +90,8 @@ FB::JSAPIPtr WebEmber::createJSAPI()
 
 bool WebEmber::onWindowAttached(FB::AttachedEvent *evt, FB::PluginWindow * pwin)
 {
+	//It is guaranteed, that each onWindowAttach and onWindowDetached event is called from the same thread on each window.
 	FBLOG_INFO("WebEmber::onWindowAttached", "Trying to attach window: " << reinterpret_cast<long>(pwin));
-	boost::mutex::scoped_lock lck(mWindowAttachMutex);
 	if (!WebEmberRunner::isRunning()) {
 		WebEmberRunner::setRunning(true);
 		mActivePluginWindow = pwin;
@@ -105,7 +105,6 @@ bool WebEmber::onWindowAttached(FB::AttachedEvent *evt, FB::PluginWindow * pwin)
 bool WebEmber::onWindowDetached(FB::DetachedEvent *evt, FB::PluginWindow * pwin)
 {
 	FBLOG_INFO("WebEmber::onWindowDetached", "Trying to detach window: " << reinterpret_cast<long>(pwin));
-	boost::mutex::scoped_lock lck(mWindowAttachMutex);
 	assert(pwin);
 	if (mActivePluginWindow == pwin && WebEmberRunner::isRunning()) {
 		mRunner->quitEmber();
