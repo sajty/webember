@@ -26,6 +26,8 @@ public:
 	 * @brief Initialize SDL in the browser window.
 	 *
 	 * This needs to be called from the main thread or some versions of firefox will assert!
+	 * 
+	 * @return Returns false, if success.
 	 */
 	bool initSDL(FB::PluginWindow *pluginwindow);
 	/**
@@ -36,7 +38,9 @@ public:
 	void deinitSDL(FB::PluginWindow *pluginwindow);
 
 	/**
-	 * @brief Event handling.
+	 * @brief Event handling
+	 * 
+	 * @return Returns whether the event was handled or not. It's always returning true, to skip the firebreath event loop.
 	 */
 	bool onX11Event(FB::X11Event *evt, FB::PluginWindow * pwin);
 
