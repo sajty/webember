@@ -61,6 +61,8 @@ std::string WebEmberRunner::getPrefix()
 	//but to get more info on what is the missing DLL when linking recursively, we need to enable this.
 	UINT browserErrorMode = GetErrorMode();
 	SetErrorMode(0);
+#elif defined(__APPLE__)
+	prefix = "@loader_path/..";
 #else
 
 	//check for PREFIX macro.
@@ -89,15 +91,16 @@ int WebEmberRunner::runEmber(std::string windowhandle)
 		} else {
 			FBLOG_INFO("WebEmberRunner::runEmber", "Shut down WebEmber normally.");
 		}
-
-		//send quit to message queue
-		{
-			WebEmberMessageQueuePtr queue(mQueue.lock());
-			if (queue) {
-				queue->stop();
-			}
+	}
+	
+	//send quit to message queue
+	{
+		WebEmberMessageQueuePtr queue(mQueue.lock());
+		if (queue) {
+			queue->stop();
 		}
 	}
+	
 	mLinker.unlink();
 
 	sRunning = false;

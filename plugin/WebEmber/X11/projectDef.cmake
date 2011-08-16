@@ -19,6 +19,7 @@ SOURCE_GROUP(X11 FILES ${PLATFORM})
 # use this to add preprocessor definitions
 add_definitions(
     -DPREFIX="${CMAKE_INSTALL_PREFIX}"
+    -DUSE_X11
 )
 
 

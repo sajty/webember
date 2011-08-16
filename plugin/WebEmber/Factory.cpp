@@ -67,14 +67,10 @@ public:
 	void getLoggingMethods(FB::Log::LogMethodList& outMethods)
 	{
 
-#ifndef _WIN32
-		//outMethods.push_back(std::make_pair(FB::Log::LogMethod_File, "~/WebEmber.log"));
-		// The next line will enable logging to the console (think: printf).
-		//outMethods.push_back(std::make_pair(FB::Log::LogMethod_Console, std::string()));
-#else
+#ifdef _WIN32
 		// The next line will enable logging to the console (think: printf).
 		outMethods.push_back(std::make_pair(FB::Log::LogMethod_Console, std::string()));
-
+		
 		const int buffsize = MAX_PATH;
 		char buffer[buffsize];
 		GetModuleFileNameA( GetModuleHandleA("npWebEmber.dll" ), buffer, buffsize );
@@ -85,11 +81,24 @@ public:
 			}
 		}
 		strcpy(&buffer[pos],"/WebEmber.log");
-
+		
 		// The next line will enable logging to a logfile.
 		outMethods.push_back(std::make_pair(FB::Log::LogMethod_File, buffer));
+#elif defined(__APPLE__)
+		outMethods.push_back(std::make_pair(FB::Log::LogMethod_Console, std::string()));
+#else
+		//NOTE: for firefox ~ returns a different directory.
+		//to get the current logged in users home, we need to use HOME env var.
+		const char* home = getenv("HOME");
+		if(home){
+			std::string logfile(home);
+			logfile += "/.ember";
+			mkdir(logfile.c_str());
+			logfile += "/WebEmber.log";
+			outMethods.push_back(std::make_pair(FB::Log::LogMethod_File, logfile.c_str()));
+		}
+		outMethods.push_back(std::make_pair(FB::Log::LogMethod_Console, std::string()));
 #endif
-		// Obviously, if you use both lines, you will get output on both sinks.
 	}
 };
 

@@ -29,7 +29,8 @@
 #include "PluginCore.h"
 
 #include <boost/thread/thread.hpp>
-#ifndef _WIN32
+#ifdef USE_X11_
+
 #include "X11/WebEmberX11.h"
 #include "PluginEvents/X11Event.h"
 #include <X11/Xlib.h>
@@ -127,7 +128,7 @@ public:
 	BEGIN_PLUGIN_EVENT_MAP()
 		EVENTTYPE_CASE(FB::AttachedEvent, onWindowAttached, FB::PluginWindow)
 		EVENTTYPE_CASE(FB::DetachedEvent, onWindowDetached, FB::PluginWindow)
-#ifndef _WIN32
+#ifdef USE_X11
 		EVENTTYPE_CASE(FB::X11Event, onX11Event, FB::PluginWindow)
 #endif
 	END_PLUGIN_EVENT_MAP()
@@ -135,13 +136,13 @@ public:
 	/** BEGIN EVENTDEF -- DON'T CHANGE THIS LINE **/
 	virtual bool onWindowAttached(FB::AttachedEvent *evt, FB::PluginWindow *);
 	virtual bool onWindowDetached(FB::DetachedEvent *evt, FB::PluginWindow *);
-#ifndef _WIN32
+#ifdef USE_X11
 	virtual bool onX11Event(FB::X11Event *evt, FB::PluginWindow *);
 #endif
 	/** END EVENTDEF -- DON'T CHANGE THIS LINE **/
 
 private:
-#ifndef _WIN32
+#ifdef USE_X11
 	WebEmberX11 mX11;
 #endif
 	WebEmberRunnerPtr mRunner;

@@ -23,9 +23,13 @@
 #include "WebEmberRunner.h"
 #ifdef _WIN32
 #include "PluginWindowWin.h"
-#else
+#elif !defined(__APPLE__)
 #include "PluginWindowX11.h"
 #endif
+
+#include <boost/thread/thread.hpp>
+#include <boost/thread/locks.hpp>
+#include <boost/interprocess/ipc/message_queue.hpp>
 
 boost::thread* WebEmber::mThreadEmber = 0;
 boost::thread* WebEmber::mThreadMessageQueue = 0;
@@ -40,14 +44,20 @@ void WebEmber::StaticDeinitialize()
 {
 	// Place one-time deinitialization stuff here. As of FireBreath 1.4 this should
 	// always be called just before the plugin library is unloaded
-
-	mThreadEmber->join();
-	mThreadMessageQueue->join();
-
+	
+	if(mThreadEmber){
+		mThreadEmber->join();
+	}
+	if(mThreadMessageQueue){
+		mThreadMessageQueue->join();
+	}
+#ifdef __APPLE__
+	deinitAutoreleasePool();
+#endif
 }
 
 WebEmber::WebEmber() :	
-#ifndef _WIN32
+#if defined(USE_X11)
 	mX11(this),
 #endif
 	mActivePluginWindow(0)
@@ -132,17 +142,18 @@ std::string WebEmber::getWindowHandle(FB::PluginWindow * pwin)
 void WebEmber::startEmber()
 {
 	WebEmberPtr thisPtr(FB::ptr_cast<WebEmber>(shared_from_this()));
-#ifndef _WIN32
+#ifdef USE_X11
 	mX11.initSDL(mActivePluginWindow);
 #endif
 	std::string handle = getWindowHandle(mActivePluginWindow);
+	
 	mMessageQueue = boost::shared_ptr<WebEmberMessageQueue>(new WebEmberMessageQueue(thisPtr));
 	mThreadMessageQueue = new boost::thread(&WebEmberMessageQueue::messageQueueThread, mMessageQueue);
 	mRunner = boost::shared_ptr<WebEmberRunner>(new WebEmberRunner(mMessageQueue));
 	mThreadEmber = new boost::thread(&WebEmberRunner::emberThread, mRunner, handle);
 	FBLOG_INFO("WebEmber::onWindowAttached", "Attached window: " << reinterpret_cast<long>(mActivePluginWindow));
 }
-#ifndef _WIN32
+#ifdef USE_X11
 bool WebEmber::onX11Event(FB::X11Event* event, FB::PluginWindow* wnd)
 {
 	mX11.onX11Event(event, wnd);

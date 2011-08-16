@@ -37,7 +37,7 @@ int WebEmberMessageQueue::run()
 
 	FBLOG_INFO("WebEmberMessageQueue::run", "Starting message queue.");
 	try {
-		boost::interprocess::message_queue mq(boost::interprocess::create_only, "WEBEMBER_PLUGIN", 32, mMQBuffSize);
+		boost::interprocess::message_queue mq(boost::interprocess::open_or_create, "WEBEMBER_PLUGIN", 32, mMQBuffSize);
 		char buff[mMQBuffSize + 1];
 		//protect the buffer from overflows.
 		buff[mMQBuffSize] = 0;
@@ -66,7 +66,7 @@ void WebEmberMessageQueue::stop()
 {
 	FBLOG_INFO("WebEmberMessageQueue::stop", "Request message queue shut down.");
 	try {
-		boost::interprocess::message_queue mq(boost::interprocess::open_only, "WEBEMBER_PLUGIN");
+		boost::interprocess::message_queue mq(boost::interprocess::open_or_create, "WEBEMBER_PLUGIN", 32, mMQBuffSize);
 		mq.send("QUIT", 5, 0);
 	} catch (const std::exception& ex) {
 		FBLOG_ERROR("WebEmberMessageQueue::stop", "Failed to send a message: " << ex.what());
@@ -75,7 +75,7 @@ void WebEmberMessageQueue::stop()
 	}
 }
 
-inline bool WebEmberMessageQueue::processMessage(char* msg, std::size_t msg_size, unsigned int msg_priority)
+bool WebEmberMessageQueue::processMessage(char* msg, std::size_t msg_size, unsigned int msg_priority)
 {
 	//the first word describes the message command.
 	char* endofCommand = strchr(msg, ' ');

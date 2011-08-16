@@ -52,13 +52,18 @@ public:
 	 */
 	static int messageQueueThread(boost::shared_ptr<WebEmberMessageQueue> queue);
 
+	/**
+	 * @brief The max length of the messages.
+	 */
+	static const std::size_t mMQBuffSize = 1024;
+	
 protected:
 	/**
 	 * @brief This will be called after every received message. Contains message handling code.
 	 *
 	 * @returns if the function returns true, the queue should be shut down.
 	 */
-	inline bool processMessage(char* msg, unsigned int msg_size, unsigned int msg_priority);
+	inline bool processMessage(char* msg, std::size_t msg_size, unsigned int msg_priority);
 
 	/**
 	 * @brief This is a wrapper to evaluate JavaScript with main thread,because its not thread safe.
@@ -70,11 +75,6 @@ protected:
 	 * that the javascript is executed or not.
 	 */
 	static void evaluateJavaScript(FB::BrowserHostPtr browser, std::string code);
-
-	/**
-	 * @brief The max length of the messages.
-	 */
-	static const std::size_t mMQBuffSize = 1024;
 
 	/**
 	 * With this weak_ptr, if the plugin's main thread and the plugins objects are shut down, MessageQueue will work.

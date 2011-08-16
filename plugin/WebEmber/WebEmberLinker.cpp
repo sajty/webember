@@ -30,7 +30,9 @@
 #include <string>
 
 #ifdef _WIN32
-const char* WebEmberLinker::sLibName = "WebEmber.dll";
+const char* WebEmberLinker::sLibName = "libWebEmber-0.1.dll";
+#elif defined(__APPLE__)
+const char* WebEmberLinker::sLibName = "libWebEmber-0.1.dylib";
 #else
 const char* WebEmberLinker::sLibName = "libWebEmber-0.1.so";
 #endif
@@ -70,7 +72,9 @@ int WebEmberLinker::link(const char* prefix)
 	//Loads the specified module into the address space of the calling process.
 	mModuleHandle = LoadLib(libfile.c_str());
 	if (mModuleHandle == NULL) {
-
+#ifndef _WIN32
+		FBLOG_ERROR("WebEmberLinker::runEmber", "dlerror: " << dlerror());
+#endif
 		FBLOG_ERROR("WebEmberLinker::runEmber", "Unable to load " << libfile);
 		return 1;
 	}
@@ -78,6 +82,9 @@ int WebEmberLinker::link(const char* prefix)
 	//Retrieves the address of an exported function or variable from the specified DLL.
 	pStartWebEmber = (funcTypeStart)GetFunction(mModuleHandle, sFuncNameStart);
 	if (pStartWebEmber == NULL) {
+#ifndef _WIN32
+		FBLOG_ERROR("WebEmberLinker::runEmber", "dlerror: " << dlerror());
+#endif
 		FBLOG_ERROR("WebEmberLinker::runEmber", "Unable to load function " << sFuncNameStart << " in " << libfile);
 		UnloadLib(mModuleHandle);
 		return 2;
@@ -86,6 +93,9 @@ int WebEmberLinker::link(const char* prefix)
 	//same as above
 	pQuitWebEmber = (funcTypeQuit)GetFunction(mModuleHandle, sFuncNameQuit);
 	if (pQuitWebEmber == NULL) {
+#ifndef _WIN32
+		FBLOG_ERROR("WebEmberLinker::runEmber", "dlerror: " << dlerror());
+#endif
 		FBLOG_ERROR("WebEmberLinker::runEmber", "Unable to load function " << sFuncNameQuit << " in " << libfile);
 		UnloadLib(mModuleHandle);
 		return 3;

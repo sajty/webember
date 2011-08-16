@@ -48,15 +48,13 @@ set(FBSTRING_MIMEType "application/x-WebEmber")
 # Mac plugin settings. If your plugin does not draw, set these all to 0
 set(FBMAC_USE_QUICKDRAW 0)
 set(FBMAC_USE_CARBON 0)
-set(FBMAC_USE_COCOA 0)
-set(FBMAC_USE_COREGRAPHICS 0)
+set(FBMAC_USE_COCOA 1)
+set(FBMAC_USE_COREGRAPHICS 1)
 set(FBMAC_USE_COREANIMATION 0)
 set(FBMAC_USE_INVALIDATINGCOREANIMATION 0)
 
 # If you want to register per-machine on Windows, uncomment this line
 set (FB_ATLREG_MACHINEWIDE 1)
 
-if(WIN32)
-  #logging on linux is not working
-  add_firebreath_library(log4cplus)
-endif()
+
+add_firebreath_library(log4cplus)
