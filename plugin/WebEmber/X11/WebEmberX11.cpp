@@ -29,7 +29,7 @@ bool WebEmberX11::initSDL(FB::PluginWindow *pluginwindow)
 	GtkWidget* widget = mPluginWindow->getWidget();
 
 	// Fixes BadWindow error in SDL_SetVideoMode
-	XFlush(GDK_DISPLAY_XDISPLAY(gtk_widget_get_display(widget)));
+	gdk_display_flush(gtk_widget_get_display(widget));
 
 	char tmp[64];
 	sprintf(tmp, "SDL_WINDOWID=%lu", (unsigned long)mPluginWindow->getWindow());

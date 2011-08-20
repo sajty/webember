@@ -68,7 +68,7 @@ int WebEmberLinker::link(const char* prefix)
 #endif
 
 	std::string libfile(libdir + sLibName);
-
+	FBLOG_INFO("WebEmberLinker::runEmber", "Loading library: " << libfile);
 	//Loads the specified module into the address space of the calling process.
 	mModuleHandle = LoadLib(libfile.c_str());
 	if (mModuleHandle == NULL) {
@@ -78,7 +78,7 @@ int WebEmberLinker::link(const char* prefix)
 		FBLOG_ERROR("WebEmberLinker::runEmber", "Unable to load " << libfile);
 		return 1;
 	}
-
+	
 	//Retrieves the address of an exported function or variable from the specified DLL.
 	pStartWebEmber = (funcTypeStart)GetFunction(mModuleHandle, sFuncNameStart);
 	if (pStartWebEmber == NULL) {

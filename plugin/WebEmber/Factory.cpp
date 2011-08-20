@@ -21,6 +21,9 @@
 #include <boost/make_shared.hpp>
 #ifdef _WIN32
 #include <windows.h>
+#else
+#include <sys/types.h>
+#include <sys/stat.h>
 #endif
 class PluginFactory: public FB::FactoryBase
 {
@@ -93,7 +96,7 @@ public:
 		if(home){
 			std::string logfile(home);
 			logfile += "/.ember";
-			mkdir(logfile.c_str());
+			mkdir(logfile.c_str(),S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 			logfile += "/WebEmber.log";
 			outMethods.push_back(std::make_pair(FB::Log::LogMethod_File, logfile.c_str()));
 		}

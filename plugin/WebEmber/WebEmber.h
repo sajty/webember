@@ -29,7 +29,7 @@
 #include "PluginCore.h"
 
 #include <boost/thread/thread.hpp>
-#ifdef USE_X11_
+#ifdef USE_X11
 
 #include "X11/WebEmberX11.h"
 #include "PluginEvents/X11Event.h"

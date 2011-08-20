@@ -16,10 +16,16 @@ file (GLOB PLATFORM RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
 
 SOURCE_GROUP(X11 FILES ${PLATFORM})
 
+find_package(PkgConfig)
+pkg_check_modules(SDL_PKGCONF QUIET sdl)
+pkg_check_modules(X11_PKGCONF QUIET x11)
+
 # use this to add preprocessor definitions
 add_definitions(
     -DPREFIX="${CMAKE_INSTALL_PREFIX}"
     -DUSE_X11
+    ${SDL_PKGCONF_CFLAGS}
+    ${X11_PKGCONF_CFLAGS}
 )
 
 
@@ -33,6 +39,6 @@ add_x11_plugin(${PROJECT_NAME} SOURCES)
 # add library dependencies here; leave ${PLUGIN_INTERNAL_DEPS} there unless you know what you're doing!
 target_link_libraries(${PROJECT_NAME}
     ${PLUGIN_INTERNAL_DEPS}
-    -lX11
-    -lSDL
+    ${X11_PKGCONF_LDFLAGS}
+    ${SDL_PKGCONF_LDFLAGS}
     )
