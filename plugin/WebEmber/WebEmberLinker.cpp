@@ -30,7 +30,7 @@
 #include <string>
 
 #ifdef _WIN32
-const char* WebEmberLinker::sLibName = "libWebEmber-0.1.dll";
+const char* WebEmberLinker::sLibName = "libWebEmber-0-1.dll";
 #elif defined(__APPLE__)
 const char* WebEmberLinker::sLibName = "libWebEmber-0.1.dylib";
 #else
