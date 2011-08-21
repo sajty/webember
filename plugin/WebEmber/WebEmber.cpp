@@ -51,9 +51,6 @@ void WebEmber::StaticDeinitialize()
 	if(mThreadMessageQueue){
 		mThreadMessageQueue->join();
 	}
-#ifdef __APPLE__
-	deinitAutoreleasePool();
-#endif
 }
 
 WebEmber::WebEmber() :	
