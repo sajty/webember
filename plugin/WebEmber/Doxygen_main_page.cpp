@@ -4,7 +4,7 @@
  * @section intro_sec Introduction
  *
  *     WebEmber is integrating Worldforge Ember into the Web Browser.<br>
- *     It uses @link http://www.firebreath.org Firebreath @endlink to integrate it in a cross-platform and cross-browser way.<br>
+ *     It uses <a href="http://www.firebreath.org">Firebreath</a> to integrate it in a cross-platform and cross-browser way.<br>
  *     <br>
  *     You can try it out here: (TODO: Add URL)
  *
