@@ -40,7 +40,7 @@ class WebEmberRunner
 public:
 	/**
 	 * @brief Ctor
-	 * @param plugin This should be the owner of the linker.
+	 * @param queue The MessageQueue associated with Ember.
 	 */
 	WebEmberRunner(WebEmberMessageQueueWeakPtr queue);
 
@@ -83,7 +83,7 @@ private:
 	WebEmberLinker mLinker;
 
 	/**
-	 * @brief The MessageQueue associated with ember.
+	 * @brief The MessageQueue associated with Ember.
 	 * This is needed, because Ember thread will start the queue shutdown.
 	 */
 	WebEmberMessageQueueWeakPtr mQueue;
