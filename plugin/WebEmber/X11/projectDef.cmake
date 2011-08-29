@@ -17,8 +17,8 @@ file (GLOB PLATFORM RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
 SOURCE_GROUP(X11 FILES ${PLATFORM})
 
 find_package(PkgConfig)
-pkg_check_modules(SDL_PKGCONF QUIET sdl)
-pkg_check_modules(X11_PKGCONF QUIET x11)
+pkg_check_modules(SDL_PKGCONF REQUIRED sdl)
+pkg_check_modules(X11_PKGCONF REQUIRED x11)
 
 # use this to add preprocessor definitions
 add_definitions(
