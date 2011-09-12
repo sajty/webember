@@ -1,15 +1,4 @@
 package org.installer;
-
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/*
- * Installation.java
- *
- * Created on 2011.08.12., 9:06:02
- */
 /**
  *
  * @author sajty
@@ -17,144 +6,81 @@ package org.installer;
 import java.net.*;
 import java.io.*;
 import java.util.zip.*;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import java.lang.*;
 public class Installation extends javax.swing.JPanel {
 
     /** Creates new form Installation */
-    public Installation(org.installer.AppMain _app) {
-        app = _app;
+    public Installation(AppMain app) {
+        mApp = app;
         initComponents();
-        installThread = new InstallThread();
-        installThread.start();
     }
-    class InstallThread extends Thread {
-        public void run() {
-            switch(app.getOS()){
-            case 0:
-                installLinux();
-                break;
-            case 1:
-                installWindows();
-                break;
-            case 2:
-                installMac();
-                break;
-            }
-            
+    
+    public void runInstall(int osType, String installPath){
+        mOsType = osType;
+        if(installPath.startsWith("~")){
+            String home = System.getenv("HOME");
+            installPath = home + installPath.substring(1);
         }
+        File dir = new File(installPath);
+        mInstallPath = dir.getAbsolutePath();
+        mInstallThread = new InstallationProcess(this);
+        mInstallThread.start();
+
     }
-    private final String ReleaseName = "WebEmber-0.1";
-    private final int Release = 0;
-    private void installLinux() {
-        prgInstall.setMaximum(300);
-        String file = downloadFile("http://sajty.elementfx.com/"+ReleaseName+"."+Release+"_LINUX.zip");
-        if(file != "") {
-            extractZip(file, app.getIntallPath() );
-            copyFile(app.getIntallPath() + "lib/npWebEmber.so", "~/.mozilla/plugins/npWebEmber.so");
-        }
-    }
-    private void installWindows() {
-        prgInstall.setMaximum(200);
-        String file = downloadFile("http://sajty.elementfx.com/"+ReleaseName+"."+Release+"_WIN32.zip");
-        if(file != ""){
-            extractZip(file, app.getIntallPath() );
-            try {
-                Runtime.getRuntime().exec("regsvr32 " + app.getIntallPath() + "/bin/WebEmber.dll");
-            }catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-    private void installMac(){
-        prgInstall.setMaximum(200);
-        String file = downloadFile("http://sajty.elementfx.com/"+ReleaseName+"."+Release+"_OSX.zip");
-        if(file != ""){
-            extractZip(file, "~/Library/Internet Plug-Ins");
-        }
-    }
-    private void progressIncrement(int max){
+    
+    public void progressIncrement() {
         int val = prgInstall.getValue();
-        if(val<max){
+        if(val<prgInstall.getMaximum()){
             prgInstall.setValue(val + 1);
         }
     }
-    private void log(String s){
+    public void progressAddValue(int val) {
+        int v = prgInstall.getValue();
+        v += val;
+        v = Math.min(v, prgInstall.getMaximum());
+        prgInstall.setValue(v);
+    }
+    public int progressGetValue(int val) {
+        return prgInstall.getMaximum();
+    }
+    public void progressSetValue(int val) {
+        prgInstall.setValue(val);
+    }
+    public void progressSetMax(int max){
+        prgInstall.setMaximum(max);
+    }
+    public int progressGetMax(){
+        return prgInstall.getMaximum();
+    }
+    public synchronized void log(String s) {
         txtInstallLog.append(s + "\n");
+        txtInstallLog.setCaretPosition(txtInstallLog.getText().length());
     }
-    private String downloadFile(String sURL) {
-        log("downloading " + sURL);
-        int limit = prgInstall.getValue();
-        try {
-            URL url = new URL(sURL);
-            URLConnection connection = url.openConnection();
-
-            InputStream in = connection.getInputStream();
-            FileOutputStream out = new FileOutputStream(url.getFile());
-            int i;
-            byte b[] = new byte[4096];
-            while ((i = in.read(b)) != -1) {
-                out.write(b,0,i);
-                progressIncrement(limit);
-            }
-            out.close();
-            return url.getFile();
-        } catch (Exception e) {
-            e.printStackTrace();
+    public void log(InputStream in) throws IOException
+    {
+        int available=in.available();
+        if (available==0){
+            return;
         }
-        return "";
+        byte b[]=new byte[available];
+        in.read(b);
+        log(new String(b,0,b.length));
     }
-    private void copyFile(String srFile, String dtFile){
-        log("copying " + srFile + " to " + dtFile);
-        int limit = prgInstall.getValue()+100;
-        try {
-            File f1 = new File(srFile);
-            File f2 = new File(dtFile);
-            InputStream in = new FileInputStream(f1);
-  
-            //For Overwrite the file.
-            OutputStream out = new FileOutputStream(f2);
-
-            byte[] buf = new byte[1024];
-            int len;
-            while ((len = in.read(buf)) > 0) {
-                out.write(buf, 0, len);
-                progressIncrement(limit);
-            }
-            in.close();
-            out.close();
-            System.out.println("File copied.");
-        } catch(FileNotFoundException ex) {
-            System.out.println(ex.getMessage() + " in the specified directory.");
-        } catch(IOException e) {
-            e.printStackTrace();
-        }
+    
+    public int getOS() {
+        return mOsType;
     }
-    public void extractZip(String src, String dst) {
-        log("extracting " + src + " to " + dst);
-        int limit = prgInstall.getValue()+100;
-        try {
-            byte[] buf = new byte[4096];
-            ZipInputStream is = new ZipInputStream(new FileInputStream(src));
-
-            ZipEntry zipentry;
-            while ((zipentry = is.getNextEntry()) != null) {
-                progressIncrement(limit);
-                String entryName = zipentry.getName();
-                System.out.println("extracting: " + entryName);
-                
-                FileOutputStream file = new FileOutputStream(dst + "/" + entryName);
-                BufferedOutputStream out = new BufferedOutputStream(file);
-                int n;
-                while ((n = is.read(buf, 0, 4096)) > -1){
-                    out.write(buf, 0, n);
-                }
-                out.close(); 
-                is.closeEntry();
-            }
-            is.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    
+    /** 
+     * Returns the selected install path. 
+     */
+    public String getIntallPath() {
+        return mInstallPath;
     }
+    
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
@@ -169,6 +95,8 @@ public class Installation extends javax.swing.JPanel {
         jScrollPane1 = new javax.swing.JScrollPane();
         txtInstallLog = new javax.swing.JTextArea();
 
+        prgInstall.setMaximum(1000);
+
         jButton3.setText("abort");
         jButton3.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -178,7 +106,9 @@ public class Installation extends javax.swing.JPanel {
 
         txtInstallLog.setColumns(20);
         txtInstallLog.setEditable(false);
+        txtInstallLog.setLineWrap(true);
         txtInstallLog.setRows(5);
+        txtInstallLog.setWrapStyleWord(true);
         jScrollPane1.setViewportView(txtInstallLog);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -213,8 +143,28 @@ private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRS
 // TODO add your handling code here:
 }//GEN-LAST:event_jButton3ActionPerformed
 
-    private final AppMain app;
-    private Thread installThread;
+    private boolean mQuit = false;
+    private Thread mInstallThread;
+    private Thread mIOWriterThread;
+    
+    
+    private AppMain mApp;
+    /**
+     * Selected operating system type to install
+     * It can be 0(Linux 32 bit),
+     * 1(Linux 64bit), 2(Windows), 3(Mac OS X)
+     */
+    private int mOsType = 0;
+    
+    /**
+     * Selected installation path.
+     * On Mac OS X this can be ignored.
+     */
+    private String mInstallPath = "";
+    
+    private final PipedInputStream mStdOut = new PipedInputStream();
+    private final PipedInputStream mStdErr = new PipedInputStream();
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton3;
     private javax.swing.JScrollPane jScrollPane1;
