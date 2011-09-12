@@ -117,6 +117,11 @@ int WebEmberRunner::runEmber(std::string windowhandle)
 
 	FBLOG_INFO("WebEmberRunner::runEmber", "Starting Ember.");
 	std::string prefix(getPrefix());
+#ifdef USE_X11
+	std::string libpath(prefix + "/lib");
+	//change directory for rpath compatibility.
+	chdir(libpath.c_str());
+#endif
 	if (mLinker.link(prefix.c_str()) == 0) {
 		int ret = mLinker.callRunEmber(windowhandle.c_str(), prefix.c_str());
 		if (ret) {
