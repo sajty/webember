@@ -130,9 +130,11 @@ void WebEmberLinker::callQuitEmber()
 {
 	//There is a small chance for a race condition, when the user quits ember manually in ember.
 	//when the user changes webpage when the FreeLibrary is called it would make segfault.
-	boost::try_mutex::scoped_try_lock lck(mUnloadLibraryMutex);
-	if (lck.owns_lock() && mModuleHandle) {
+	boost::mutex::scoped_lock lck(mUnloadLibraryMutex);
+	if (mModuleHandle) {
 		assert(pQuitWebEmber);
 		pQuitWebEmber();
+	}else{
+		FBLOG_INFO("WebEmberLinker::callQuitEmber", "Failed to quit ember, because ember is already shut down!");
 	}
 }
