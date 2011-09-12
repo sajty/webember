@@ -44,13 +44,6 @@ void WebEmber::StaticDeinitialize()
 {
 	// Place one-time deinitialization stuff here. As of FireBreath 1.4 this should
 	// always be called just before the plugin library is unloaded
-	
-	if(mThreadEmber){
-		mThreadEmber->join();
-	}
-	if(mThreadMessageQueue){
-		mThreadMessageQueue->join();
-	}
 }
 
 WebEmber::WebEmber() :	
@@ -86,6 +79,14 @@ void WebEmber::shutdown()
 	// object should be released here so that this object can be safely
 	// destroyed. This is the last point that shared_from_this and weak_ptr
 	// references to this object will be valid
+	FBLOG_INFO("WebEmber::shutdown", "Waiting for ember to shut down.");
+	if(mThreadEmber){
+		mThreadEmber->join();
+	}
+	if(mThreadMessageQueue){
+		mThreadMessageQueue->join();
+	}
+	FBLOG_INFO("WebEmber::shutdown", "Plugin is ready for shutdown");
 
 }
 
