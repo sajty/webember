@@ -23,6 +23,7 @@
 
 #include <iostream>
 #include <string>
+#include <fstream>
 #include <vector>
 
 bool WebEmberRunner::sRunning = false;
@@ -61,6 +62,7 @@ std::string WebEmberRunner::getPrefix()
 	//but to get more info on what is the missing DLL when linking recursively, we need to enable this.
 	UINT browserErrorMode = GetErrorMode();
 	SetErrorMode(0);
+
 #elif defined(__APPLE__)
 	prefix = "@loader_path/..";
 #else
@@ -69,14 +71,45 @@ std::string WebEmberRunner::getPrefix()
 #ifdef PREFIX
 	prefix = PREFIX;
 #endif
+	const char* path;
+#ifdef USE_X11
+	//check "~/.ember/webember.path".
+	//NOTE: ~ needs to be replaced with HOME in some versions of firefox.
+	//after that, read the first line of the file and interpret it as a path.
+
+	path = getenv("HOME");
+	if(path != 0){
+		std::string pf(path);
+		pf = "~/.ember/webember.path";
+		std::ifstream ifs(pf.c_str());
+		if(ifs.is_open()){
+			pf.clear();
+			std::getline(ifs, pf);
+			ifs.close();
+			if(!pf.empty()){
+				prefix = pf;
+			}
+		}
+	}
+#endif
 
 	//check for WEBEMBER_PREFIX environment variable.
-	const char* path;
 	path = getenv("WEBEMBER_PREFIX");
 	if (path != NULL) {
 		prefix = path;
 	}
 #endif
+	
+#ifdef USE_X11
+	//replace '~' character at the beginning with HOME env var if availible. 
+	if(prefix[0] == '~'){
+		path = getenv("HOME");
+		if(path != 0){
+			prefix.replace(0,1,path);
+		}
+	}
+#endif
+	
 	return prefix;
 }
 int WebEmberRunner::runEmber(std::string windowhandle)
