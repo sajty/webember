@@ -133,6 +133,9 @@ std::string WebEmber::getWindowHandle(FB::PluginWindow * pwin)
 #else
 	//On Linux, we will init SDL in the plugin, because windowing needs to be done on the main thread.
 	//SDL provides the handle globally with SDL_GetWMInfo function.
+	
+	//put 1 to it, to make it compatible with atoi, even if its not used.
+	sstr << "1";
 #endif
 	return sstr.str();
 }
