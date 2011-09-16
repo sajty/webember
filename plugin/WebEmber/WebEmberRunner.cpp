@@ -78,17 +78,15 @@ std::string WebEmberRunner::getPrefix()
 	//after that, read the first line of the file and interpret it as a path.
 
 	path = getenv("HOME");
-	if(path != 0){
-		std::string pf(path);
-		pf = "~/.ember/webember.path";
-		std::ifstream ifs(pf.c_str());
-		if(ifs.is_open()){
-			pf.clear();
-			std::getline(ifs, pf);
-			ifs.close();
-			if(!pf.empty()){
-				prefix = pf;
-			}
+	std::string pf(path ? path : "~");
+	pf += "/.ember/webember.path";
+	std::ifstream ifs(pf.c_str());
+	if(ifs.is_open()){
+		pf.clear();
+		std::getline(ifs, pf);
+		ifs.close();
+		if(!pf.empty()){
+			prefix = pf;
 		}
 	}
 #endif
