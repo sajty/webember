@@ -70,7 +70,7 @@ private:
 	//here is the platform specific difference
 #ifdef _WIN32
 	HMODULE mModuleHandle;
-	#define CALLTYPE __stdcall
+	#define CALLTYPE __cdecl
 	#define LoadLib LoadLibraryA
 	#define GetFunction GetProcAddress
 	#define UnloadLib FreeLibrary
