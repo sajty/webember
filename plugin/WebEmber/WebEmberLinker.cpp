@@ -44,6 +44,7 @@ WebEmberLinker::WebEmberLinker() :
 {
 
 }
+
 int WebEmberLinker::link(const char* prefix)
 {
 	assert(!mModuleHandle);
@@ -51,7 +52,13 @@ int WebEmberLinker::link(const char* prefix)
 
 #ifdef _WIN32
 	if(!libdir.empty()) {
+#if defined(_DEBUG) && defined(SEPARATE_BUILDS)
+		//In msvc I prefer to separate release/debug builds to prevent mixing the runtime.
+		//Set SEPARATE_BUILDS to enable this feature.
+		libdir += "\\bin_d";
+#else
 		libdir += "\\bin";
+#endif
 		SetDllDirectoryA(libdir.c_str());
 		SetCurrentDirectoryA(libdir.c_str());
 		libdir += "\\";
