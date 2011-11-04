@@ -139,6 +139,15 @@ int WebEmberRunner::runEmber(std::string windowhandle)
 void WebEmberRunner::quitEmber()
 {
 	mLinker.callQuitEmber();
+
+	//temporary fix
+	while(sRunning){
+		try {
+			boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+		} catch (...) {
+			FBLOG_WARN("WebEmberRunner::quitEmber", "Ember wait loop failed with exception.");
+		}
+	}
 }
 
 int WebEmberRunner::emberThread(WebEmberRunnerPtr runner, std::string windowhandle)
