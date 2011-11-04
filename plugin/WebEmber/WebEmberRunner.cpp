@@ -44,25 +44,19 @@ std::string WebEmberRunner::getPrefix()
 	const int buffsize = MAX_PATH;
 	char buffer[buffsize];
 	//check the location of the current DLL, we need to know the output filename.
-	//WebEmber.dll should be next to npWebEmber.dll
+	//libWebEmber-0-1.dll should be next to npWebEmber.dll
 	GetModuleFileNameA(GetModuleHandleA("npWebEmber.dll" ), buffer, buffsize);
-	//trim to the last \ or / character
-	std::string libpath(buffer);
-	int pos = libpath.find_last_of("\\/");
-	if(pos != std::string::npos) {
-		libpath.resize(pos-1);
+	
+	//cut down "/bin/npWebEmber.dll" to get prefix
+	prefix = buffer;
+	int pos = prefix.find_last_of("\\/");
+	if(pos > 0 && pos != std::string::npos) {
+		pos = prefix.find_last_of("\\/", pos-1);
+		if(pos != std::string::npos) {
+			prefix.resize(pos);
+		}
 	}
-
-	SetDllDirectoryA(libpath.c_str());
-	SetCurrentDirectoryA(libpath.c_str());
-
-	libpath += '\\';
-
-	//normally the browsers are disabling verbose popup messages from the OS on errors,
-	//but to get more info on what is the missing DLL when linking recursively, we need to enable this.
-	UINT browserErrorMode = GetErrorMode();
-	SetErrorMode(0);
-
+	
 #elif defined(__APPLE__)
 	prefix = "@loader_path/..";
 #else
